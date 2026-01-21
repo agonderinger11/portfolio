@@ -4,72 +4,20 @@
     box-sizing: border-box;
 }
 
-:root {
-    --mouse-x: 50%;
-    --mouse-y: 50%;
-    --color-1: #667eea;
-    --color-2: #764ba2;
-    --color-3: #f093fb;
-    --color-4: #f5576c;
-    --color-5: #4facfe;
-    --color-6: #00f2fe;
-    --color-7: #43e97b;
-    --color-8: #fa709a;
-}
-
 body {
     min-height: 100vh;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(
-        135deg,
-        var(--color-1),
-        var(--color-2),
-        var(--color-3),
-        var(--color-4),
-        var(--color-5),
-        var(--color-6),
-        var(--color-7),
-        var(--color-8),
-        var(--color-1)
-    );
-    background-size: 400% 400%;
-    animation: gradientFlow 15s ease infinite;
-    position: relative;
+    background: #0a0a0f;
     overflow: hidden;
 }
 
-body::before {
-    content: '';
-    position: absolute;
+#gradient-canvas {
+    position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(
-        circle at var(--mouse-x) var(--mouse-y),
-        rgba(255, 255, 255, 0.15) 0%,
-        transparent 50%
-    );
-    pointer-events: none;
-    transition: background 0.3s ease-out;
-}
-
-@keyframes gradientFlow {
-    0% {
-        background-position: 0% 50%;
-    }
-    25% {
-        background-position: 50% 100%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    75% {
-        background-position: 50% 0%;
-    }
-    100% {
-        background-position: 0% 50%;
-    }
+    width: 100%;
+    height: 100%;
+    z-index: 0;
 }
 
 .container {
@@ -87,7 +35,7 @@ body::before {
 h1 {
     font-size: clamp(2.5rem, 8vw, 5rem);
     color: white;
-    text-shadow: 2px 4px 20px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
     margin-bottom: 1.5rem;
     font-weight: 300;
     letter-spacing: 0.05em;
@@ -95,8 +43,8 @@ h1 {
 
 .greeting {
     font-size: clamp(1rem, 2.5vw, 1.5rem);
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.85);
     max-width: 600px;
     line-height: 1.6;
-    text-shadow: 1px 2px 10px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
