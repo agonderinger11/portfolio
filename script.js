@@ -6,15 +6,14 @@ let mouseX = 0.5;
 let mouseY = 0.5;
 let time = 0;
 
+// Dark green code-themed palette
 const colors = [
-    { r: 102, g: 126, b: 234 },  // Purple-blue
-    { r: 118, g: 75, b: 162 },   // Deep purple
-    { r: 240, g: 147, b: 251 },  // Pink
-    { r: 245, g: 87, b: 108 },   // Coral
-    { r: 79, g: 172, b: 254 },   // Sky blue
-    { r: 0, g: 242, b: 254 },    // Cyan
-    { r: 67, g: 233, b: 123 },   // Green
-    { r: 250, g: 112, b: 154 },  // Rose
+    { r: 0, g: 255, b: 136 },    // Matrix green
+    { r: 16, g: 185, b: 129 },   // Emerald
+    { r: 34, g: 197, b: 94 },    // Green 500
+    { r: 74, g: 222, b: 128 },   // Green 400
+    { r: 20, g: 184, b: 166 },   // Teal
+    { r: 45, g: 212, b: 191 },   // Teal 400
 ];
 
 class Blob {
@@ -31,10 +30,9 @@ class Blob {
         this.baseY = this.y;
         this.vx = 0;
         this.vy = 0;
-        this.radius = 0.2 + Math.random() * 0.3;
-        this.speed = 0.0003 + Math.random() * 0.0005;
-        this.angle = Math.random() * Math.PI * 2;
-        this.drift = 0.15 + Math.random() * 0.2;
+        this.radius = 0.25 + Math.random() * 0.2;
+        this.speed = 0.0005 + Math.random() * 0.0003;
+        this.drift = 0.08 + Math.random() * 0.06;
         this.phaseX = Math.random() * Math.PI * 2;
         this.phaseY = Math.random() * Math.PI * 2;
         this.mass = 0.5 + Math.random() * 0.5;
@@ -47,7 +45,7 @@ class Blob {
 
     update(time, mouseInfluence) {
         // Apply velocity with friction
-        const friction = 0.98;
+        const friction = 0.97;
         this.vx *= friction;
         this.vy *= friction;
 
@@ -55,41 +53,39 @@ class Blob {
         this.baseX += this.vx;
         this.baseY += this.vy;
 
-        // Organic drifting motion using multiple sine waves
+        // Smooth organic drifting motion
         const drift1 = Math.sin(time * this.speed + this.phaseX) * this.drift;
-        const drift2 = Math.cos(time * this.speed * 0.7 + this.phaseY) * this.drift * 0.6;
-        const drift3 = Math.sin(time * this.speed * 1.3 + this.phaseX * 2) * this.drift * 0.3;
+        const drift2 = Math.cos(time * this.speed * 0.6 + this.phaseY) * this.drift;
 
-        this.x = this.baseX + drift1 + drift3;
-        this.y = this.baseY + drift2 + Math.sin(time * this.speed * 0.5) * this.drift * 0.4;
+        this.x = this.baseX + drift1;
+        this.y = this.baseY + drift2;
 
-        // Mouse influence - blobs gently move toward cursor
+        // Gentle mouse attraction
         const dx = mouseInfluence.x - this.x;
         const dy = mouseInfluence.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist < 0.5) {
-            const force = (0.5 - dist) * 0.1;
-            this.x += dx * force * 0.3;
-            this.y += dy * force * 0.3;
+        if (dist < 0.4 && dist > 0.01) {
+            const force = (0.4 - dist) * 0.02;
+            this.baseX += dx * force;
+            this.baseY += dy * force;
         }
 
-        // Wrap around edges smoothly
-        if (this.baseX < -0.5) this.baseX += 2;
-        if (this.baseX > 1.5) this.baseX -= 2;
-        if (this.baseY < -0.5) this.baseY += 2;
-        if (this.baseY > 1.5) this.baseY -= 2;
+        // Wrap around edges
+        if (this.baseX < -0.3) this.baseX += 1.6;
+        if (this.baseX > 1.3) this.baseX -= 1.6;
+        if (this.baseY < -0.3) this.baseY += 1.6;
+        if (this.baseY > 1.3) this.baseY -= 1.6;
     }
 
     draw(ctx, width, height) {
         const x = this.x * width;
         const y = this.y * height;
-        const r = this.radius * Math.max(width, height);
+        const r = this.radius * Math.min(width, height);
 
         const gradient = ctx.createRadialGradient(x, y, 0, x, y, r);
-        gradient.addColorStop(0, `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, 0.8)`);
-        gradient.addColorStop(0.4, `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, 0.4)`);
-        gradient.addColorStop(0.7, `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, 0.1)`);
+        gradient.addColorStop(0, `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, 0.4)`);
+        gradient.addColorStop(0.5, `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, 0.15)`);
         gradient.addColorStop(1, `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, 0)`);
 
         ctx.fillStyle = gradient;
@@ -100,13 +96,16 @@ class Blob {
 }
 
 const blobs = [];
-for (let i = 0; i < 8; i++) {
+for (let i = 0; i < 6; i++) {
     blobs.push(new Blob(i));
 }
 
 function resize() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
+    // Clear to dark background on resize
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, width, height);
 }
 
 window.addEventListener('resize', resize);
@@ -118,10 +117,7 @@ document.addEventListener('mousemove', (e) => {
 });
 
 // Wind gust on click
-canvas.addEventListener('click', (e) => {
-    const clickX = e.clientX / width;
-    const clickY = e.clientY / height;
-
+function applyWindGust(clickX, clickY) {
     for (const blob of blobs) {
         const dx = blob.x - clickX;
         const dy = blob.y - clickY;
@@ -129,55 +125,38 @@ canvas.addEventListener('click', (e) => {
 
         if (dist < 0.001) continue;
 
-        // Force falls off with distance but affects all blobs
-        const maxDist = 1.5;
+        const maxDist = 1.2;
         const normalizedDist = Math.min(dist, maxDist) / maxDist;
-        const forceMagnitude = (1 - normalizedDist * normalizedDist) * 0.15;
+        const forceMagnitude = (1 - normalizedDist) * 0.08;
 
-        // Direction away from click
         const forceX = (dx / dist) * forceMagnitude;
         const forceY = (dy / dist) * forceMagnitude;
 
         blob.applyForce(forceX, forceY);
     }
+}
+
+canvas.addEventListener('click', (e) => {
+    applyWindGust(e.clientX / width, e.clientY / height);
 });
 
-// Also support touch for mobile
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const touch = e.touches[0];
-    const clickX = touch.clientX / width;
-    const clickY = touch.clientY / height;
-
-    for (const blob of blobs) {
-        const dx = blob.x - clickX;
-        const dy = blob.y - clickY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < 0.001) continue;
-
-        const maxDist = 1.5;
-        const normalizedDist = Math.min(dist, maxDist) / maxDist;
-        const forceMagnitude = (1 - normalizedDist * normalizedDist) * 0.15;
-
-        const forceX = (dx / dist) * forceMagnitude;
-        const forceY = (dy / dist) * forceMagnitude;
-
-        blob.applyForce(forceX, forceY);
-    }
+    applyWindGust(touch.clientX / width, touch.clientY / height);
 }, { passive: false });
 
 function animate() {
     time++;
 
-    // Dark background with slight fade for trail effect
-    ctx.fillStyle = 'rgba(10, 10, 15, 0.05)';
+    // Fade to dark background - GitHub dark theme color
+    ctx.fillStyle = 'rgba(13, 17, 23, 0.08)';
     ctx.fillRect(0, 0, width, height);
 
-    // Set blend mode for color mixing
-    ctx.globalCompositeOperation = 'lighter';
-
     const mouseInfluence = { x: mouseX, y: mouseY };
+
+    // Draw blobs with screen blend for soft glow
+    ctx.globalCompositeOperation = 'screen';
 
     for (const blob of blobs) {
         blob.update(time, mouseInfluence);
