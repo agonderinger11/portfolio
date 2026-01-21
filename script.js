@@ -5,11 +5,11 @@ let width, height;
 let time = 0;
 let growthProgress = 0;
 let growing = true;
-const growthSpeed = 0.003;
-const shrinkSpeed = 0.004;
+const growthSpeed = 0.002;
+const shrinkSpeed = 0.003;
 
-// Green fractal colors
-const branchColor = { r: 34, g: 197, b: 94 };
+// Darker green palette
+const branchColor = { r: 20, g: 90, b: 45 };
 
 function resize() {
     width = canvas.width = window.innerWidth;
@@ -19,71 +19,77 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// Recursive fractal tree branch
-function drawBranch(x, y, length, angle, depth, maxDepth, progress) {
-    if (depth > maxDepth || length < 2) return;
+// Golden angle for spiral pattern
+const goldenAngle = Math.PI * (3 - Math.sqrt(5));
 
-    // Calculate how much of this depth level should be drawn
-    const depthProgress = Math.max(0, Math.min(1, (progress * maxDepth - depth + 1)));
+// Draw spiral fractal branch
+function drawSpiralBranch(cx, cy, length, angle, depth, maxDepth, progress) {
+    if (depth > maxDepth || length < 1) return;
+
+    // Calculate progress for this depth level
+    const depthProgress = Math.max(0, Math.min(1, (progress * (maxDepth + 1) - depth)));
     if (depthProgress <= 0) return;
 
     const currentLength = length * depthProgress;
 
-    // Calculate end point
-    const endX = x + Math.cos(angle) * currentLength;
-    const endY = y + Math.sin(angle) * currentLength;
+    // End point
+    const endX = cx + Math.cos(angle) * currentLength;
+    const endY = cy + Math.sin(angle) * currentLength;
 
-    // Branch thickness decreases with depth
-    const thickness = Math.max(1, (maxDepth - depth + 1) * 1.5);
+    // Line thickness - sharper, thinner lines
+    const thickness = Math.max(0.5, (maxDepth - depth) * 0.8);
 
-    // Color gets lighter/more vibrant toward tips
+    // Darker green, slightly lighter at tips
     const depthRatio = depth / maxDepth;
-    const r = branchColor.r + depthRatio * 40;
-    const g = branchColor.g + depthRatio * 30;
-    const b = branchColor.b + depthRatio * 20;
-    const alpha = 0.9 - depthRatio * 0.3;
+    const r = branchColor.r + depthRatio * 15;
+    const g = branchColor.g + depthRatio * 25;
+    const b = branchColor.b + depthRatio * 10;
+    const alpha = 0.95 - depthRatio * 0.2;
 
-    // Draw the branch
+    // Draw sharp line
     ctx.beginPath();
-    ctx.moveTo(x, y);
+    ctx.moveTo(cx, cy);
     ctx.lineTo(endX, endY);
     ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${alpha * depthProgress})`;
     ctx.lineWidth = thickness;
-    ctx.lineCap = 'round';
+    ctx.lineCap = 'square';
     ctx.stroke();
 
-    // Add glow effect on main branches
-    if (depth < 4) {
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(endX, endY);
-        ctx.strokeStyle = `rgba(${branchColor.r}, ${branchColor.g}, ${branchColor.b}, ${0.1 * depthProgress})`;
-        ctx.lineWidth = thickness + 6;
-        ctx.stroke();
-    }
+    // Recurse with spiral rotation
+    if (depthProgress > 0.2) {
+        const newLength = length * 0.72;
+        const spiralOffset = goldenAngle * 0.4;
 
-    // Only recurse if this branch is sufficiently drawn
-    if (depthProgress > 0.3) {
-        const newLength = length * 0.67;
-        const branchAngle = 0.45 + Math.sin(depth * 0.5) * 0.1; // Slight variation
+        // Multiple branches spiraling outward
+        drawSpiralBranch(endX, endY, newLength, angle - spiralOffset, depth + 1, maxDepth, progress);
+        drawSpiralBranch(endX, endY, newLength, angle + spiralOffset, depth + 1, maxDepth, progress);
 
-        // Left branch
-        drawBranch(endX, endY, newLength, angle - branchAngle, depth + 1, maxDepth, progress);
-
-        // Right branch
-        drawBranch(endX, endY, newLength, angle + branchAngle, depth + 1, maxDepth, progress);
-
-        // Sometimes add a middle branch for more complexity
-        if (depth < 6 && depth % 2 === 0) {
-            drawBranch(endX, endY, newLength * 0.8, angle, depth + 1, maxDepth, progress);
+        // Extra branch for density
+        if (depth < maxDepth - 2) {
+            drawSpiralBranch(endX, endY, newLength * 0.6, angle, depth + 1, maxDepth, progress);
         }
     }
 }
 
-// Draw a complete fractal tree
-function drawFractalTree(x, y, size, progress) {
-    const maxDepth = 12;
-    drawBranch(x, y, size, -Math.PI / 2, 0, maxDepth, progress);
+// Draw complete spiral fractal from center
+function drawSpiralFractal(progress) {
+    const cx = width / 2;
+    const cy = height / 2;
+
+    // Calculate max length to reach screen corners
+    const maxRadius = Math.sqrt((width/2) ** 2 + (height/2) ** 2);
+    const branchLength = maxRadius * 0.25;
+
+    const numSpokes = 8;
+    const maxDepth = 10;
+
+    for (let i = 0; i < numSpokes; i++) {
+        const baseAngle = (i / numSpokes) * Math.PI * 2;
+        // Add slight rotation over time for organic feel
+        const angle = baseAngle + time * 0.0002;
+
+        drawSpiralBranch(cx, cy, branchLength, angle, 0, maxDepth, progress);
+    }
 }
 
 function animate() {
@@ -108,23 +114,8 @@ function animate() {
     ctx.fillStyle = '#0d1117';
     ctx.fillRect(0, 0, width, height);
 
-    // Draw main fractal tree from bottom center
-    const treeHeight = Math.min(width, height) * 0.35;
-    drawFractalTree(width * 0.5, height * 0.95, treeHeight, growthProgress);
-
-    // Draw smaller trees on sides (slightly delayed)
-    const sideProgress = Math.max(0, growthProgress - 0.15) / 0.85;
-    if (sideProgress > 0) {
-        drawFractalTree(width * 0.15, height * 0.98, treeHeight * 0.5, sideProgress);
-        drawFractalTree(width * 0.85, height * 0.98, treeHeight * 0.45, sideProgress * 0.9);
-    }
-
-    // Tiny background trees
-    const bgProgress = Math.max(0, growthProgress - 0.3) / 0.7;
-    if (bgProgress > 0) {
-        drawFractalTree(width * 0.3, height * 0.99, treeHeight * 0.25, bgProgress * 0.7);
-        drawFractalTree(width * 0.7, height * 0.99, treeHeight * 0.2, bgProgress * 0.6);
-    }
+    // Draw the spiral fractal
+    drawSpiralFractal(growthProgress);
 
     requestAnimationFrame(animate);
 }
